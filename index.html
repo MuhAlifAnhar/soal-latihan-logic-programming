@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CBT 200 Soal Logic Test</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f6f9;
+        margin: 0;
+      }
+      .container {
+        max-width: 900px;
+        margin: 30px auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        padding: 8px 15px;
+        margin: 5px;
+        border: none;
+        background: #007bff;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .option {
+        margin: 8px 0;
+      }
+      .timer {
+        float: right;
+        font-weight: bold;
+        color: red;
+      }
+      .review {
+        background: #f1f1f1;
+        padding: 15px;
+        margin-top: 15px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h2>Simulasi CBT 200 Soal <span class="timer" id="timer"></span></h2>
+      <div id="quiz"></div>
+
+      <button onclick="prevQuestion()">Previous</button>
+      <button onclick="nextQuestion()">Next</button>
+      <button onclick="submitExam()">Submit</button>
+
+      <div id="result"></div>
+    </div>
+
+    <script>
+      let duration = 90 * 60; // 90 menit
+      let currentQuestion = 0;
+      let answers = [];
+      let tabSwitch = 0;
+
+      const questions = [];
+
+      /* =========================
+   GENERATE 200 SOAL OTOMATIS
+========================= */
+
+      function generateQuestions() {
+        for (let i = 1; i <= 200; i++) {
+          let type = i % 4;
+
+          if (type === 0) {
+            // ARITMATIKA
+            let a = Math.floor(Math.random() * 50) + 10;
+            let b = Math.floor(Math.random() * 30) + 5;
+            let correct = a + b;
+
+            questions.push(
+              createQuestion(`Soal ${i}: ${a} + ${b} = ?`, correct),
+            );
+          } else if (type === 1) {
+            // PERKALIAN
+            let a = Math.floor(Math.random() * 20) + 5;
+            let b = Math.floor(Math.random() * 10) + 2;
+            let correct = a * b;
+
+            questions.push(
+              createQuestion(`Soal ${i}: ${a} × ${b} = ?`, correct),
+            );
+          } else if (type === 2) {
+            // DERET
+            let start = Math.floor(Math.random() * 10) + 2;
+            let step = Math.floor(Math.random() * 5) + 2;
+            let correct = start + step * 4;
+
+            questions.push(
+              createQuestion(
+                `Soal ${i}: ${start}, ${start + step}, ${start + 2 * step}, ${start + 3 * step}, ?`,
+                correct,
+              ),
+            );
+          } else {
+            // LOGIKA PERBANDINGAN
+            let a = Math.floor(Math.random() * 100) + 20;
+            let b = Math.floor(Math.random() * 100) + 10;
+            let correct = a > b ? a : b;
+
+            questions.push(
+              createQuestion(
+                `Soal ${i}: Manakah yang lebih besar? ${a} atau ${b}?`,
+                correct,
+              ),
+            );
+          }
+        }
+
+        // RANDOM URUTAN SOAL
+        questions.sort(() => Math.random() - 0.5);
+      }
+
+      function createQuestion(text, correctAnswer) {
+        let options = [
+          correctAnswer,
+          correctAnswer + Math.floor(Math.random() * 10) + 1,
+          correctAnswer - (Math.floor(Math.random() * 5) + 1),
+          correctAnswer + Math.floor(Math.random() * 20) + 5,
+        ];
+
+        options = options.sort(() => Math.random() - 0.5);
+
+        return {
+          question: text,
+          options: options,
+          answer: options.indexOf(correctAnswer),
+        };
+      }
+
+      /* ========================= */
+
+      function startTimer() {
+        setInterval(() => {
+          let minutes = Math.floor(duration / 60);
+          let seconds = duration % 60;
+          document.getElementById("timer").innerText =
+            minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+          duration--;
+          if (duration < 0) submitExam();
+        }, 1000);
+      }
+
+      function loadQuestion() {
+        let q = questions[currentQuestion];
+        let html = `<p><b>${q.question}</b></p>`;
+        q.options.forEach((opt, i) => {
+          html += `
+        <div class="option">
+        <input type="radio" name="opt" value="${i}"
+        ${answers[currentQuestion] == i ? "checked" : ""}
+        onchange="saveAnswer(${i})"> ${opt}
+        </div>`;
+        });
+        document.getElementById("quiz").innerHTML = html;
+      }
+
+      function saveAnswer(val) {
+        answers[currentQuestion] = val;
+      }
+
+      function nextQuestion() {
+        if (currentQuestion < questions.length - 1) {
+          currentQuestion++;
+          loadQuestion();
+        }
+      }
+
+      function prevQuestion() {
+        if (currentQuestion > 0) {
+          currentQuestion--;
+          loadQuestion();
+        }
+      }
+
+      function submitExam() {
+        let score = 0;
+        questions.forEach((q, i) => {
+          if (answers[i] == q.answer) score += 10;
+          else if (answers[i] != undefined) score -= 5;
+        });
+
+        document.getElementById("result").innerHTML = `
+    <div class="review">
+    <h3>Hasil Akhir</h3>
+    Skor: <b>${score}</b> dari ${questions.length * 10}
+    </div>`;
+      }
+
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) {
+          tabSwitch++;
+          alert("Jangan pindah tab!");
+          if (tabSwitch >= 3) submitExam();
+        }
+      });
+
+      /* START */
+      generateQuestions();
+      startTimer();
+      loadQuestion();
+    </script>
+  </body>
+</html>
