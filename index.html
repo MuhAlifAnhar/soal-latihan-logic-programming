@@ -196,6 +196,13 @@
       }
 
       function nextQuestion() {
+        if (answers[currentQuestion] === undefined) {
+          alert(
+            "Silakan pilih jawaban terlebih dahulu sebelum lanjut ke soal berikutnya.",
+          );
+          return;
+        }
+
         if (currentQuestion < questions.length - 1) {
           currentQuestion++;
           loadQuestion();
